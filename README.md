@@ -9,13 +9,13 @@ The workflow is built using **n8n** (a no-code automation tool) and involves the
 3. **Summarize with OpenRouter**: Use the Gemini model to summarize the content (e.g., "Plastic pollution is harming human health at every stage... #PlasticPollution").
 4. **Length Check**: Ensure the summary is under 280 characters.
 5. **Post to Twitter**: Share the summary as a tweet using the Twitter API.
-
-## Contents
-- `video/telegram_to_twitter_workflow.mp4`: A video tutorial explaining the workflow with a diagram.
-- `diagram.png`: A flowchart visualizing the process.
-- `script.md`: The narration script used in the video.
-- `n8n_workflow.json`: The n8n workflow configuration file for this automation.
-- `screenshots/`: Folder containing visual documentation of the workflow.
+   
+##Content
+- `Assets/My_workflow.json`: The n8n workflow configuration file for this automation.
+- `Assets/TELEGRAM.png`: Screenshot of the Telegram message input.
+- `Assets/WORKFLOW.png`: Screenshot of the n8n workflow overview.
+- `Assets/README.md`: This documentation file.
+- *(Note: The video and script files are not included in this folder but are referenced in the Video Tutorial section below.)*
 
 ## Setup Instructions
 1. **Set Up n8n**:
@@ -43,7 +43,7 @@ The n8n workflow includes nodes for:
 - **Missing Parameter Error**: Ensure the OpenRouter response is properly mapped. The Code node extracts `choices[0].message.content` into `json.text`. Use `{{ $node["Code"].json["text"] }}` in the "X" node’s Text field.
 - **Undefined Output in X Node**: If the "X" node outputs `[undefined]`, verify the Code node name in the expression and ensure the `text` field is populated. Add a Set node to debug the data flow (e.g., log `{{ $input.first().json.text }}`).
 
-## Video Tutorial
+## Video 
 I’ve shared a video walkthrough on LinkedIn: [Telegram to Twitter Workflow Video](https://www.linkedin.com/posts/arhumkhan049_aiautomation-growthhacking-nocoderevolution-activity-7321959807718948864-p4Ea?utm_source=share&utm_medium=member_desktop&rcm=ACoAADo3m7wBae9QfdCB6um2S2F195YcIe_tVTY)
 
 
