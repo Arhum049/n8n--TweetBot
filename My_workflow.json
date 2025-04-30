@@ -1,0 +1,255 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram掏Trigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "MASKED_ID",
+      "name": "Telegram Trigger",
+      "webhookId": "MASKED_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "MASKED_API_KEY",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $json.message.text;\n\n// Use regex to extract the subject and URL with flexible spacing\nconst subjectMatch = message.match(/Subject\\s*:\\s*(.*?)\\s*URL\\s*:/i);\nconst urlMatch = message.match(/URL\\s*:\\s*(\\S+)/i);\n\nconst subject = subjectMatch ? subjectMatch[1].trim() : \"\";\nconst url = urlMatch ? urlMatch[1].trim() : \"\";\n\nreturn [\n  {\n    json: {\n      subject,\n      url\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "MASKED_ID",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"url\"]}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "MASKED_ID",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "MASKED_ID",
+              "name": "htmlContent",
+              "value": "={{$json[\"data\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        0
+      ],
+      "id": "MASKED_ID",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $json[\"htmlContent\"];\n\n// Extract only paragraph content as example\nconst matches = html.match(/<p[^>]*>(.*?)<\\/p>/g);\nconst paragraphs = matches ? matches.map(p => p.replace(/<[^>]+>/g, '')) : [];\n\nreturn [\n  {\n    json: {\n      textContent: paragraphs.join(\"\\n\\n\")\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "MASKED_ID",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer MASKED_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Title",
+              "value": "Summarize AI Article"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://chat.openrouter.ai"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        0
+      ],
+      "id": "MASKED_ID",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const subject = $node['Code'].json.subject; // From Telegram parsing\nconst rawContent = $node['Code1'].json.textContent; // From scraping\n\n// Prepare OpenRouter payload without cleaning words\nreturn [{\n  json: {\n    model: \"google/gemini-flash-1.5-8b\", // Using the model you specified\n    messages: [\n      {\n        role: \"system\",\n        content: `Summarize the following content based on the subject, dont use bold words, make it in such a away that we could post it on twitter: ${subject}`\n      },\n      {\n        role: \"user\",\n        content: rawContent // Keep all original text\n      }\n    ]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "MASKED_ID",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "text": "={{$json[\"choices\"][0][\"message\"][\"content\"]}}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        -20
+      ],
+      "id": "MASKED_ID",
+      "name": "X",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "MASKED_ID",
+          "name": "MASKED_NAME"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "MASKED_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "MASKED_INSTANCE_ID"
+  },
+  "id": "MASKED_WORKFLOW_ID",
+  "tags": []
+}
